@@ -7,8 +7,9 @@ for (let h = 8; h <= 22; h++) {
   const texto = String(h).padStart(2, '0') + ':00';
   $('hora').insertAdjacentHTML('beforeend', `<option>${texto}</option>`);
 }
-// No permitir fechas pasadas
-$('fecha').min = new Date().toISOString().split('T')[0];
+// No permitir fechas pasadas (usa la fecha local, no la UTC)
+const hoy = new Date();
+$('fecha').min = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
 
 // ---------- Validaciones en pantalla ----------
 function validar() {
@@ -24,12 +25,20 @@ function validar() {
 campos.forEach(id => $(id).addEventListener('input', () => $(id).classList.remove('invalido')));
 
 // ---------- Llamadas al servidor ----------
+// Si abres index.html con doble clic (file://) igual se conecta al servidor en el puerto 3000
+const BASE = location.protocol === 'file:' ? 'http://localhost:3000' : '';
+
 async function api(url, metodo = 'GET', cuerpo) {
-  const r = await fetch(url, {
-    method: metodo,
-    headers: { 'Content-Type': 'application/json' },
-    body: cuerpo ? JSON.stringify(cuerpo) : undefined
-  });
+  let r;
+  try {
+    r = await fetch(BASE + url, {
+      method: metodo,
+      headers: { 'Content-Type': 'application/json' },
+      body: cuerpo ? JSON.stringify(cuerpo) : undefined
+    });
+  } catch (e) {
+    throw new Error('No se pudo conectar con el servidor. Ejecuta "npm start" en la terminal de VS Code.');
+  }
   const datos = await r.json();
   if (!r.ok) throw new Error(datos.error || 'Error inesperado');
   return datos;
@@ -44,7 +53,7 @@ $('form-reserva').addEventListener('submit', async (e) => {
     $('form-reserva').reset();
     $('error').textContent = nueva.estado === 'en espera'
       ? 'Ese horario está ocupado. Quedaste en la cola de espera.' : '';
-    refrescar();
+    refrescar().catch(err => { $('error').textContent = err.message; });
   } catch (err) { $('error').textContent = err.message; }
 });
 
@@ -56,7 +65,7 @@ $('btn-deshacer').addEventListener('click', async () => {
 async function cancelar(id) {
   if (!confirm('¿Cancelar esta reserva?')) return;
   await api(`/api/reservas/${id}`, 'DELETE');
-  refrescar();
+  refrescar().catch(err => { $('error').textContent = err.message; });
 }
 async function pagar(id) {
   try { await api(`/api/reservas/${id}/pago`, 'POST'); refrescar(); }
@@ -65,6 +74,8 @@ async function pagar(id) {
 window.cancelar = cancelar; window.pagar = pagar;
 
 // ---------- Pintar pantalla ----------
+const esc = (t) => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 async function refrescar() {
   const [reservas, cola, historial] = await Promise.all([
     api('/api/reservas'), api('/api/cola'), api('/api/historial')
@@ -75,17 +86,17 @@ async function refrescar() {
     const acciones = r.estado === 'cancelada' ? '' : `
       ${r.estado === 'confirmada' ? `<button class="mini" onclick="pagar(${r.id})">Registrar abono</button>` : ''}
       <button class="mini peligro" onclick="cancelar(${r.id})">Cancelar</button>`;
-    return `<tr><td>${r.id}</td><td>${r.cliente}</td><td>${r.fecha}</td><td>${r.hora}</td><td>${r.cancha}</td>
+    return `<tr><td>${r.id}</td><td>${esc(r.cliente)}</td><td>${r.fecha}</td><td>${r.hora}</td><td>${r.cancha}</td>
       <td><span class="estado ${clase}">${r.estado}</span></td><td class="acciones">${acciones}</td></tr>`;
   }).join('');
   $('vacio-reservas').hidden = reservas.length > 0;
 
   $('lista-cola').innerHTML = cola.map(r =>
-    `<li>${r.cliente}<small>${r.cancha} · ${r.fecha} · ${r.hora}</small></li>`).join('');
+    `<li>${esc(r.cliente)}<small>${r.cancha} · ${r.fecha} · ${r.hora}</small></li>`).join('');
   $('vacio-cola').hidden = cola.length > 0;
 
   $('lista-pila').innerHTML = historial.map(h =>
-    `<li>${h.tipo}: ${h.cliente}<small>Reserva ${h.reservaId} · ${h.hora}</small></li>`).join('');
+    `<li>${esc(h.tipo)}: ${esc(h.cliente)}<small>Reserva ${h.reservaId} · ${h.hora}</small></li>`).join('');
   $('vacio-pila').hidden = historial.length > 0;
 }
-refrescar();
+refrescar().catch(err => { $('error').textContent = err.message; });
