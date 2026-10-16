@@ -1,0 +1,4 @@
+#aplicar desde la terminal de vs, posteriormente abrir desde el link que genere (Ejem: Servidor listo en http://localhost:3000)
+
+npm install
+npm start
