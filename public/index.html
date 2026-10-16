@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reservas de cancha sintética</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Cancha sintética</h1>
+    <p>Reserva tu horario. Si está ocupado, entras a la lista de espera.</p>
+  </header>
+
+  <main>
+    <section class="panel" aria-labelledby="t-form">
+      <h2 id="t-form">Nueva reserva</h2>
+      <form id="form-reserva" novalidate>
+        <label>Cliente
+          <input type="text" id="cliente" placeholder="Nombre y apellido">
+        </label>
+        <label>Fecha
+          <input type="date" id="fecha">
+        </label>
+        <label>Hora
+          <select id="hora">
+            <option value="">Elige una hora</option>
+          </select>
+        </label>
+        <label>Cancha
+          <select id="cancha">
+            <option value="">Elige una cancha</option>
+            <option>Cancha 1</option>
+            <option>Cancha 2</option>
+            <option>Cancha 3</option>
+          </select>
+        </label>
+        <p id="error" class="error" role="alert"></p>
+        <button type="submit" class="primario">Reservar</button>
+      </form>
+    </section>
+
+    <section class="panel ancho" aria-labelledby="t-res">
+      <h2 id="t-res">Reservas</h2>
+      <div class="tabla-scroll">
+        <table>
+          <thead><tr><th>Id</th><th>Cliente</th><th>Fecha</th><th>Hora</th><th>Cancha</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="tabla-reservas"></tbody>
+        </table>
+      </div>
+      <p id="vacio-reservas" class="vacio">Aún no hay reservas. Crea la primera con el formulario.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="t-cola">
+      <h2 id="t-cola">Cola de espera <small>sale el primero que llegó</small></h2>
+      <ol id="lista-cola" class="lista"></ol>
+      <p id="vacio-cola" class="vacio">Nadie en espera.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="t-pila">
+      <h2 id="t-pila">Historial <small>arriba el más reciente</small></h2>
+      <button id="btn-deshacer" class="secundario">Deshacer último movimiento</button>
+      <ul id="lista-pila" class="lista"></ul>
+      <p id="vacio-pila" class="vacio">Sin movimientos todavía.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

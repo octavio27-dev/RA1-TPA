@@ -1,0 +1,8 @@
+{
+  "name": "reservas-cancha",
+  "version": "1.0.0",
+  "description": "Sistema de reservas para cancha sintética con Colas (FIFO) y Pilas (LIFO)",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.19.2" }
+}
